@@ -2,16 +2,15 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
+using FileConverterUI.Core.Interfaces;
 
-namespace FileConverterUI.Core
+namespace FileConverterUI.Services
 {
-    public class ConversionManager
+    public class ConversionService : IConversionService
     {
-        public Dictionary<string, List<string>> Options { get; private set; }
-
-        public ConversionManager()
+        public Dictionary<string, List<string>> GetSupportedConversions()
         {
-            Options = new Dictionary<string, List<string>>
+            return new Dictionary<string, List<string>>
             {
                 { "Image Conversions", new List<string> {
                     "PNG to JPG", "JPG to PNG", "PNG to BMP", "BMP to PNG",
@@ -34,7 +33,7 @@ namespace FileConverterUI.Core
             };
         }
 
-        public string GetFilterForConversion(string conversionType)
+        public string GetFilterForType(string conversionType)
         {
             var filters = new Dictionary<string, string>
             {
@@ -46,13 +45,10 @@ namespace FileConverterUI.Core
                 { "MP4 to MP3", "Video Files|*.mp4;*.avi;*.mkv" }
             };
 
-            if (filters.ContainsKey(conversionType))
-                return filters[conversionType];
-            
-            return "All Files|*.*";
+            return filters.ContainsKey(conversionType) ? filters[conversionType] : "All Files|*.*";
         }
 
-        public string GetOutputFileName(string inputFile, string conversionType, string outputDir, bool overwrite)
+        private string GetOutputFileName(string inputFile, string conversionType, string outputDir, bool overwrite)
         {
             string fileName = Path.GetFileNameWithoutExtension(inputFile);
             string extension = Path.GetExtension(inputFile);
@@ -66,9 +62,7 @@ namespace FileConverterUI.Core
                 { "MP4 to MP3", ".mp3" }
             };
 
-            string newExtension = outputExtensions.ContainsKey(conversionType) ?
-                outputExtensions[conversionType] : extension;
-
+            string newExtension = outputExtensions.ContainsKey(conversionType) ? outputExtensions[conversionType] : extension;
             string outputFile = Path.Combine(outputDir, fileName + newExtension);
 
             if (!overwrite && File.Exists(outputFile))
@@ -84,16 +78,15 @@ namespace FileConverterUI.Core
             return outputFile;
         }
 
-        public async Task ConvertFilesAsync(List<string> selectedFiles, string conversionType, string outputDir, bool overwrite, IProgress<int> progress, Action<string, string> onError, Action<string> onProgressChange)
+        public async Task ConvertAsync(IEnumerable<string> files, string conversionType, string outputDir, bool overwrite, IProgress<int> progress, Action<string, string> onError, Action<string> onProgressUpdate)
         {
             await Task.Run(() =>
             {
-                for (int i = 0; i < selectedFiles.Count; i++)
+                int i = 0;
+                foreach (var inputFile in files)
                 {
-                    string inputFile = selectedFiles[i];
                     string outputFile = GetOutputFileName(inputFile, conversionType, outputDir, overwrite);
-
-                    onProgressChange?.Invoke($"Converting: {Path.GetFileName(inputFile)}");
+                    onProgressUpdate?.Invoke($"Converting: {Path.GetFileName(inputFile)}");
 
                     try
                     {
@@ -110,7 +103,8 @@ namespace FileConverterUI.Core
                         onError?.Invoke(inputFile, ex.Message);
                     }
                     
-                    progress?.Report(i + 1);
+                    i++;
+                    progress?.Report(i);
                 }
             });
         }

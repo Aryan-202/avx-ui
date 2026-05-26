@@ -1,5 +1,6 @@
 using System;
 using System.Windows.Forms;
+using FileConverterUI.App;
 
 namespace FileConverterUI
 {
@@ -11,7 +12,8 @@ namespace FileConverterUI
             Application.SetHighDpiMode(HighDpiMode.SystemAware);
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
-            Application.Run(new Form1());
+            
+            AppBootstrapper.Run();
         }
     }
 }
