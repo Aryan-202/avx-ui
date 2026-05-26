@@ -1,0 +1,109 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:avx_ui.ViewModels"
+        xmlns:l10n="using:avx_ui.Assets.l10n"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d" d:DesignWidth="850" d:DesignHeight="600"
+        x:Class="avx_ui.Views.MainWindow"
+        x:DataType="vm:MainWindowViewModel"
+        Icon="/Assets/avalonia-logo.ico"
+        Title="{x:Static l10n:AppResources.AppTitle}"
+        Width="900" Height="650"
+        WindowStartupLocation="CenterScreen">
+
+    <Design.DataContext>
+        <vm:MainWindowViewModel/>
+    </Design.DataContext>
+
+    <Grid RowDefinitions="Auto,*,Auto">
+        <!-- Top Options Panel -->
+        <Border Grid.Row="0" Background="{DynamicResource SystemRegionBrush}" Padding="15">
+            <Grid ColumnDefinitions="150, 150, 20, *, Auto, Auto">
+                <StackPanel Grid.Column="0" Spacing="5" Margin="0,0,10,0">
+                    <TextBlock Text="{x:Static l10n:AppResources.InputFormat}" FontWeight="SemiBold" />
+                    <ComboBox ItemsSource="{Binding InputFormats}" 
+                              SelectedItem="{Binding SelectedInputFormat}" 
+                              HorizontalAlignment="Stretch" />
+                </StackPanel>
+
+                <StackPanel Grid.Column="1" Spacing="5">
+                    <TextBlock Text="{x:Static l10n:AppResources.OutputFormat}" FontWeight="SemiBold" />
+                    <ComboBox ItemsSource="{Binding OutputFormats}" 
+                              SelectedItem="{Binding SelectedOutputFormat}" 
+                              HorizontalAlignment="Stretch" />
+                </StackPanel>
+
+                <StackPanel Grid.Column="3" Spacing="5">
+                    <TextBlock Text="{x:Static l10n:AppResources.OutputDirectory}" FontWeight="SemiBold" />
+                    <TextBox Text="{Binding OutputDirectory}" />
+                </StackPanel>
+
+                <Button Grid.Column="4" Content="{x:Static l10n:AppResources.Browse}" 
+                        VerticalAlignment="Bottom" 
+                        Margin="10,0,0,0" 
+                        Click="BrowseOutput_Click"/>
+
+                <Button Grid.Column="5" Content="{x:Static l10n:AppResources.ToggleTheme}" 
+                        Command="{Binding ToggleThemeCommand}"
+                        VerticalAlignment="Bottom" 
+                        Margin="10,0,0,0" />
+            </Grid>
+        </Border>
+
+        <!-- Main Content (File List & Drag Drop) -->
+        <Grid Grid.Row="1" Margin="15" RowDefinitions="Auto,*">
+            <StackPanel Grid.Row="0" Orientation="Horizontal" Spacing="15" Margin="0,0,0,10">
+                <Button Content="{x:Static l10n:AppResources.AddFiles}" Click="SelectFiles_Click" Classes="accent" />
+                <Button Content="{x:Static l10n:AppResources.ClearList}" Command="{Binding ClearFilesCommand}" />
+                <TextBlock Text="{x:Static l10n:AppResources.DragDropHint}" VerticalAlignment="Center" Foreground="{DynamicResource SystemControlPageTextBaseMediumBrush}"/>
+            </StackPanel>
+            
+            <Border Grid.Row="1" BorderBrush="{DynamicResource SystemControlForegroundBaseMediumBrush}" 
+                    BorderThickness="1" CornerRadius="4" 
+                    DragDrop.AllowDrop="True" >
+                <ListBox ItemsSource="{Binding SelectedFiles}" 
+                         Background="Transparent"
+                         ScrollViewer.HorizontalScrollBarVisibility="Auto">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <Grid ColumnDefinitions="*, Auto">
+                                <TextBlock Text="{Binding}" VerticalAlignment="Center"/>
+                                <Button Grid.Column="1" Content="X" 
+                                        Command="{ReflectionBinding $parent[Window].DataContext.RemoveFileCommand}"
+                                        CommandParameter="{Binding}"
+                                        Background="Transparent" 
+                                        Padding="5" />
+                            </Grid>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+            </Border>
+        </Grid>
+
+        <!-- Bottom Status & Convert Panel -->
+        <Border Grid.Row="2" Background="{DynamicResource SystemRegionBrush}" Padding="15">
+            <Grid RowDefinitions="Auto, Auto">
+                <!-- Settings & Status -->
+                <Grid Grid.Row="0" ColumnDefinitions="Auto, Auto, *">
+                    <CheckBox Grid.Column="0" Content="{x:Static l10n:AppResources.OverwriteExisting}" IsChecked="{Binding OverwriteExisting}" Margin="0,0,20,0" />
+                    <CheckBox Grid.Column="1" Content="{x:Static l10n:AppResources.KeepOriginal}" IsChecked="{Binding KeepOriginal}" />
+                    <TextBlock Grid.Column="2" Text="{Binding StatusText}" HorizontalAlignment="Right" VerticalAlignment="Center" />
+                </Grid>
+
+                <!-- Progress & Convert Button -->
+                <Grid Grid.Row="1" ColumnDefinitions="*, Auto" Margin="0,15,0,0">
+                    <ProgressBar Grid.Column="0" Minimum="0" Maximum="{Binding ProgressMaximum}" Value="{Binding ProgressValue}" 
+                                 VerticalAlignment="Center" Margin="0,0,15,0" />
+                    <Button Grid.Column="1" Content="{x:Static l10n:AppResources.ConvertFiles}" 
+                            Command="{Binding ConvertCommand}" 
+                            IsEnabled="{Binding !IsConverting}"
+                            Classes="accent" 
+                            Width="150" 
+                            HorizontalContentAlignment="Center"/>
+                </Grid>
+            </Grid>
+        </Border>
+    </Grid>
+
+</Window>
